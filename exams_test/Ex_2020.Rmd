@@ -1,0 +1,75 @@
+---
+title: "Exam"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+
+---
+
+Attached below is a mini Shiny document with a slider called "Lower and Upper Bounds:" and two tabs: "PDF plot" and "CDF plot". The former shows the curve of the probability density function of a Uniform distribution with range $(0,1)$. 
+
+
+_**Download and run the script provided below (file `app.Rmd`).**_
+
+The objective of this exercise is to correct and improve this Shiny document. For that, you are asked to answer the following questions.  
+
+
+---
+
+To get a precise idea of the desired dynamic finale document, you can check this app  <center> <https://anourel.shinyapps.io/Sol/> </center> Explore the **sidebar** and pay close attention to the output.
+
+---
+
+
+### 1
+
+Transform the provided document into a **Dashboard** with a sidebar containing the user's inputs and a main panel containing the R outputs ("PDF plot" and "CDF plot" tabs). 
+
+>**From now on, use the Dashboard just created to answer all the  asked questions.**
+
+### 2
+
+Instead of `curve`, use the function `stat_function` form the `ggplot2` package to produce the PDF plot.
+
+### 3
+
+Introduces the necessary modifications to make the PDF plot **reactive**, so that it changes according to the `min` and `max` parameters of the slider. 
+
+>In the following, each time you are asked to make a new plot, you should **use `ggplot` exclusively**. Moreover, each plot, and generally **each output that you will create must be reactive**.    
+
+### 4
+
+Complete the empty tab "CDF plot" by adding a plot showing the corresponding cumulative distribution function (CDF).
+
+### 5
+
+Add the possibility for the user to choose the `Normal` distribution instead of the `Uniform`. The graphics, PDF and CDF, must react to the user's choice. As parameters for the normal, use ($\mu = 0$ and $\sigma = 1$).   
+
+### 6
+
+The same question as before but this time add the possibility to choose the `Binomial` distribution. As parameters for the later, use ($p = 0.5$ and $n = 1$). The graphics, PDF and CDF, must be updated accordingly to **reflect the discreet nature of this distribution**.
+
+### 7
+
+Add the possibility for the user to choose the parameters of the binomial and the normal. For that, you can add a slider for each parameter to be controlled ($\mu$ and $\sigma$ for the normal, and $p $ and $n$ for the binomial). Again, the graphics, PDF and CDF, must react to the user's choices.   
+
+### 8
+
+Introduce the necessary modifications so do that when the user chooses a distribution (uniform, binomial or normal), only the sliders associated with the parameters of the chosen distribution are displayed in the UI.
+
+
+
+### 9
+
+Try to produce an output that is identical to this <center> <https://anourel.shinyapps.io/Sol/> </center> Explore the **sidebar** and pay close attention to the all the elements of the output.  
+
+---
+
+<br>

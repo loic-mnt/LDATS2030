@@ -1,0 +1,128 @@
+---
+title: "Distribution"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    vertical_layout: fill
+    theme: yeti
+runtime : shiny
+---
+
+```{r setup, include=FALSE}
+library(ggplot2); theme_set(theme_bw())
+```
+
+## {.sidebar}
+
+```{r}
+selectInput( 
+  inputId = "dist",
+  label = h5(strong("Choose a distribution")),
+  choices = c("Uniform", "Normal", "Binomial"),
+  selected = "Uniform"
+  )
+
+renderUI({
+  if(input$dist == "Normal"){
+    tagList(
+     sliderInput(
+        inputId = "mu",
+        label = "Mean:",
+        min = -50,
+        max = 50,
+        value = 0
+     ),
+     sliderInput(
+        inputId = "sig",
+        label = "Standard Deviation:",
+        min = 0.1,
+        max = 30,
+        value = 1
+         )
+    )
+  } else if(input$dist == "Uniform"){
+ sliderInput(
+        inputId = "minmax",
+        label = "Lower and Upper Bounds:",
+        min = -50,
+        max = 50,
+        value = c(5, 10)
+      )
+  } else if(input$dist == "Binomial"){
+    tagList(
+     sliderInput(
+        inputId = "n",
+        label = "n:",
+        min = 1,
+        max = 50,
+        value = 5,
+        step = 1
+     ),
+     sliderInput(
+          inputId = "p",
+        label = "p:",
+        min = 0,
+        max = 1,
+        value = 0.5,
+        step = 0.01
+     )
+    )
+  }
+    
+})
+```
+
+##
+
+
+### PDF plot
+
+```{r}
+      renderPlot(
+        if(input$dist == "Uniform"){
+        ggplot(data.frame(x = c(input$minmax[1], input$minmax[2])), aes(x)) +
+          stat_function(
+            fun = dunif,
+            args = list( min = input$minmax[1], max = input$minmax[2]), size=1
+            )+labs(x="x", y="PDF")
+        } else if(input$dist == "Normal"){
+        ggplot(data.frame(x = c(input$mu - 2.5*input$sig, input$mu + 2.5*input$sig)), aes(x)) +
+          stat_function(
+            fun = dnorm,
+            args = list( mean = input$mu, sd = input$sig), size=1
+            )+labs(x="x", y="PDF")
+        } else if(input$dist == "Binomial"){
+          ggplot(data.frame(x = 0:input$n , y = dbinom(0:input$n, size = input$n, prob=input$p)), aes(as.factor(x),y)) +
+          geom_bar(stat = "identity")+labs(x="x", y="PDF")
+        }
+      )
+```
+
+
+### CDF plot
+
+```{r}
+      renderPlot(
+        if(input$dist == "Uniform"){
+        ggplot(data.frame(x = c(input$minmax[1], input$minmax[2])), aes(x)) +
+          stat_function(
+            fun = punif,
+            args = list( min = input$minmax[1], max = input$minmax[2]), size=1
+            )+labs(x="x",y="CDF")
+             } else if(input$dist == "Normal"){
+             ggplot(data.frame(x = c(input$mu - 2.5*input$sig, input$mu + 2.5*input$sig)), aes(x)) +
+          stat_function(
+            fun = pnorm,
+            args = list( mean = input$mu, sd = input$sig), size=1
+            )+labs(x="x",y="CDF")
+             } else if(input$dist == "Binomial"){
+          ggplot(data.frame(x = 0:input$n ), aes(x)) +
+          stat_function(
+            fun = pbinom,
+            args = list( size = input$n, prob = input$p), size=1,geom = "step"
+            )+labs(x="x",y="CDF")
+        }
+    )
+
+```
+

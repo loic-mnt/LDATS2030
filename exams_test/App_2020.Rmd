@@ -1,0 +1,47 @@
+---
+title: "Shiny document"
+output: html_document 
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+
+```{r}
+
+fluidPage(
+  sidebarLayout(
+    sidebarPanel(
+      sliderInput(
+        inputId = "minmax",
+        label = "Lower and Upper Bounds:",
+        min = -50,
+        max = 50,
+        value = c(5, 10)
+      )
+    ),
+
+    mainPanel(
+      tabsetPanel(
+        tabPanel(
+          "PDF plot",
+          renderPlot(
+            curve(
+              dunif(x, min = 0, max = 1),
+              from = 0, to = 1, ylab = "PDF"
+            )
+          )
+        ),
+
+        tabPanel(
+          "CDF plot"
+        )
+      )
+    )
+  )
+)
+```
+

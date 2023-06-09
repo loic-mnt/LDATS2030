@@ -1,0 +1,195 @@
+---
+title: "Finale RG (il y a longtemps) :  `r params$player`"
+date: "2023-06-08"
+output: 
+  html_document:
+      theme: yeti
+      number_section : yes
+params:
+  player: "Rafael Nadal"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,
+                      fig.align = "center",
+                      warning = FALSE,
+                      message = F
+                      )
+```
+
+```{r packages}
+library(ggplot2)
+theme_set(theme_minimal())
+library(DT)
+library(kableExtra)
+library(patchwork)
+
+```
+
+
+
+# Importation des données
+
+```{r, echo=TRUE}
+load("MenRG_Final.Rda")
+data <- MenRG_Final
+```
+
+
+
+Le data frame MenRG_Final a `r nrow(MenRG_Final)` lignes et ses colonnes sont `r colnames(data)`.  
+
+Les deux joueurs concernés par le match sont:
+
+* `r data[1, "player2"]`
+* `r data[1, "player1"]`
+
+Remarque : Le nombre de lignes, les noms des colonnes et les noms des deux joueurs doivent être obtenus à l’aide de commandes R.
+
+# Descriptions des données
+
+Cette section décrit les différentes variables du jeu de données qui seront utiles par la suite.
+
+```{r}
+varname <- c("P1DistanceRun", "PointNumber", "PointServer", "ServeDepth", "ServeNumber", "ServeWidth", "Speed_KMH")
+descrip <- c("Distance parcourue par le joueur", "Numéro du point", "Serveur du point", "Profondeur du service", "Numéro du service", "Direction du service", "Vitesse du service en km/h")
+data_des <- data.frame("Nom" = varname, "Description" = descrip)
+```
+
+```{r}
+data_des |> 
+  kable() |> 
+  kable_minimal()
+```
+
+NCTL et CTL signifient respectivement « Loin de la ligne de fond de carré de service » et « Près de la ligne de fond de carré de service ». B, BC, BW, C et W dans ServeWidth indique à quel point le service est en direction du joueur.  
+
+Voici un apercu des donées:
+
+```{r}
+data2 <- MenRG_Final[, colnames(MenRG_Final) %in% varname]
+data2 |> 
+  DT::datatable(
+    options = list(pageLength = 20,
+                   lenghtMenu = c(10, 20, 25, 50, 100),
+                   dom = "ltp",
+                   scrollX = F)
+  )
+```
+
+# Comparaison des vitesses de services entre les serveurs
+
+## Distribution de la vitesse des services 
+
+Pour cela, on peut regarder les principaux qunatiles, la moyenne et l'écart-type.
+
+```{r}
+data_na <- subset(data2, PointServer == "Rafael Nadal")$Speed_KMH
+data_wa <- subset(data2, PointServer == "Stan Wawrinka")$Speed_KMH
+
+sum_na <- c(summary(data_na), "Ecart-Type" = sqrt(var(data_na)))
+sum_wa <- c(summary(data_wa), "Ecart-Type" = sqrt(var(data_wa)))
+
+tab <- cbind("Rafael Nadal" = sum_na,"Stan Wawrinka" = sum_wa)
+rownames(tab) <- c("Minimum", "p25", "Moyenne", "Médiane", "p75", "Maximum", "Ecart-Type")
+round(tab,2) |> 
+  kable(position = "center") |> 
+  kable_minimal()
+```
+
+## Distance parcourue en fonction du serveur et de qui a gané le point
+
+```{r}
+
+PW_labels <- c("Rafael Nadal"= "Nadal a gagné le point", "Stan Wawrinka" = "Wawrinka a gagné le point")
+ggplot(data, aes(x = PointServer, y = P1DistanceRun, fill =ServeNumber))+
+  geom_boxplot()+
+  scale_fill_hue(direction = 1)+
+  theme(legend.position = "top")+
+  labs(x = "Serveur", y = "Distance parcourue"
+       )+
+  facet_grid(cols =vars(PointWinner), labeller = as_labeller(PW_labels))+
+  scale_fill_manual(
+    values = c("First serve" = "red", "Second serve" = "cyan",
+               labels = c("Premier Service", "Deuxième Service"))
+  )
+```
+
+## Vainqueur du point en fonction du serveur
+
+
+```{r}
+ggplot(data, aes(x = PointServer, fill = PointWinner))+
+  geom_bar(position = "fill")+
+  labs(x = "Serveur", y = "Pourcentage de points gagnés")+
+  scale_y_continuous(labels = scales::percent)+
+  labs(fill = "Vainqueur\ndu point")
+```
+
+# Uniquement pour `r params$player`
+
+Remarque: Le nom du joueur vient d'une commande R.  
+
+On sélectionne les lignes uniquements telles que le serveur est l'un des deux joueurs et telles que `ServeWidth != "" & ServeDepth !=""`. Ici, on le fait pour `r params$player`.
+
+## Evolution au cours du match
+
+Pour savoir s'il y a une évolution de la vitesse, on réalise un scatter plot représentant la vitesse du service en fonction du nombre de points. On sépare les premier et deuximème services.
+
+```{r, fig.cap=paste("Vitesse du Service de", params$player, "lors de la finale de Roland Garros ")}
+
+ggplot(data, aes(x = PointNumber, y = Speed_KMH, col = ServeNumber, shape = ServeNumber))+
+  geom_point()+
+  geom_smooth(se = T)+
+  ylim(140,200)+
+  labs(x = "Numero du point", y = "Vitesse de service en km/h", col = "", shape = "")+
+  scale_color_manual(
+    values = c("First serve" = "red", "Second serve" = "blue",
+               labels = c("Premier Service", "Deuxième service"))
+  )+
+  geom_smooth(method = "lm", formula = y~1, se = F, lty = 2)+
+  scale_shape_manual(values = c("First serve" = 1, "Second serve" = 2))
+```
+
+
+Remarques: La droite horizontale est la moyenne des premiers et deuxièmes services respectivement, l'autre est une régression locale (loes). et la phrase sous la figure est un caption qui dépend du nom du joueur.
+
+
+```{r}
+p1<- ggplot(data, aes(x = Speed_KMH, col = ServeNumber))+
+  geom_histogram(aes(y = ..density..), bins = 8, col = "black", fill = "gray")+
+  geom_density(size = 1)+
+  scale_color_manual(
+    values = c("First serve" = "red", "Second serve" = "blue"),
+    labels = c("Premier", "Deuxième")
+  )+
+  labs(col = "Service")
+  
+p2 <- ggplot(data, aes(x = Speed_KMH, fill = ServeNumber))+
+  geom_boxplot(outlier.shape = NA)+
+  labs(x = "Vitesse en km/h", y="")+
+  scale_fill_manual(
+    values = c("First serve"= "red", "Second serve" = "blue"),
+    labels = c("Premier", "Deuxième")
+    
+  )+
+  scale_y_discrete(position = "right")+
+  theme(legend.position = "none")
+
+data3 <- subset(data, ServeWidth !="" & ServeDepth !="")
+
+p3 <- ggplot(data3, aes(x = ServeWidth, fill = ServeDepth))+
+  geom_bar(aes(y= ..count../sum(..count..)), position = "dodge")+
+  scale_fill_manual(
+    values = c("CTL" = "lightgreen", "NCTL" = "violet")
+      
+  )+
+  theme(legend.position = "bottom")+
+  labs(x ="", y = "Pourcentage")+
+  scale_y_continuous(labels = scales::percent)+
+  labs(fill = "")
+  
+(p1+p2)/p3
+```
+
+
